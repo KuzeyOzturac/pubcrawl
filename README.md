@@ -4,7 +4,7 @@ A responsive, static pub crawl planner. Search for a starting place, choose a mi
 
 ## How it works
 
-- Photon provides location suggestions; browser geolocation is optional.
+- Photon provides location suggestions. The location button requests browser permission, uses recent coordinates when available, and starts pub search automatically. If permission is blocked or times out, the page explains how to continue with manual search.
 - OpenStreetMap's Overpass API finds pubs in the selected radius. If it is unavailable, a bounded Nominatim search supplies up to 50 results and the map says that coverage may be incomplete. Ratings come from the OpenStreetMap `rating:average` or `rating` tags. Many pubs have no public rating, so the default includes unrated pubs; raising the rating threshold excludes them.
 - A nearest-neighbour pass followed by 2-opt minimizes approximate point-to-point travel for the chosen stops. The public OSRM walking service supplies street-following geometry when available. If it is unavailable, the map shows dashed direct links and labels the distance as an estimate.
 - Every discovered pub is included initially. Use **Remove** and **Add** beside each stop to adjust the crawl and automatically recalculate its order and distance.

@@ -80,12 +80,33 @@ $('distance').addEventListener('input', (event) => {
   $('distance-value').textContent = `${filters.distance} km`;
 });
 $('locate').addEventListener('click', () => {
-  if (!navigator.geolocation) { message('Location is unavailable. Search for a place instead.'); return; }
-  message('Finding your location…');
+  if (!window.isSecureContext || !navigator.geolocation) {
+    message('Your browser cannot share location on this page. Search for a place instead.');
+    return;
+  }
+  const button = $('locate');
+  button.disabled = true;
+  button.setAttribute('aria-busy', 'true');
+  button.title = 'Finding your location…';
+  message('Finding your location… Allow location access if your browser asks.');
+  const finish = () => {
+    button.disabled = false;
+    button.removeAttribute('aria-busy');
+    button.title = 'Use my location';
+  };
   navigator.geolocation.getCurrentPosition(
-    (position) => setOrigin(position.coords.latitude, position.coords.longitude, 'My current location'),
-    () => message('Could not access your location. Search for a place instead.'),
-    { enableHighAccuracy: false, timeout: 10000 },
+    (position) => {
+      finish();
+      setOrigin(position.coords.latitude, position.coords.longitude, 'Your location');
+      $('build').click();
+    },
+    (error) => {
+      finish();
+      if (error.code === 1) message('Location access was blocked. Allow it in your browser’s site settings, or search for a place.');
+      else if (error.code === 3) message('Location timed out. Try again or search for a place.');
+      else message('Your position is unavailable. Try again or search for a place.');
+    },
+    { enableHighAccuracy: false, maximumAge: 300000, timeout: 20000 },
   );
 });
 
