@@ -1,6 +1,6 @@
 # Roundabout design system
 
-Last updated: 2026-11-10
+Last updated: 2026-11-10 — repaired map layout and added stop controls.
 
 ## Direction
 
@@ -15,7 +15,7 @@ Editorial neighbourhood guide: warm paper, deep green ink, lime controls, and a 
 
 ## Layout
 
-A compact header and asymmetric editorial intro sit above a two-column planner. The map receives most of the width. Below 700px, controls stack above a 440px map. Controls remain 44px or larger.
+A compact header and asymmetric editorial intro sit above a two-column planner. The map receives most of the width and stretches to the controls without contributing to their intrinsic height. Below 700px, controls stack above a 440px map. Controls remain 44px or larger.
 
 ## Motion and states
 
