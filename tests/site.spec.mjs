@@ -1,9 +1,13 @@
 import {test, expect} from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 
 const places = {
   features: [{
     properties: {name: 'Toronto City Hall', city: 'Toronto', country: 'Canada'},
     geometry: {coordinates: [-79.3849, 43.6535]},
+  }, {
+    properties: {name: 'Nathan Phillips Square', city: 'Toronto', country: 'Canada'},
+    geometry: {coordinates: [-79.3848, 43.6525]},
   }],
 };
 
@@ -45,22 +49,27 @@ async function contrast(page, foregroundSelector, backgroundSelector) {
   }, {foregroundSelector, backgroundSelector});
 }
 
+async function expectAccessible(page) {
+  const results = await new AxeBuilder({page}).analyze();
+  expect(results.violations.map(({id, nodes}) => ({id, targets: nodes.map(({target}) => target)}))).toEqual([]);
+}
+
 test('built page has readable type and actions', async ({page}) => {
   await page.setViewportSize({width: 1440, height: 900});
   await page.goto('./');
   await expect(page.locator('.hero h1')).toBeVisible();
   for (const [text, surface] of [
     ['.hero h1', 'body'],
-    ['.hero h1 em', 'body'],
     ['.controls h2', '.controls'],
     ['.footer', 'body'],
     ['.hero-actions button span', '.hero-actions button'],
   ]) {
     expect(await contrast(page, text, surface), `${text} contrast`).toBeGreaterThanOrEqual(4.5);
   }
-  const map = page.locator('#map');
-  await expect(map).toBeVisible();
-  expect((await map.boundingBox()).width).toBeGreaterThan(600);
+  await expect(page.locator('.map-empty')).toBeVisible();
+  await expect(page.locator('#map')).toBeHidden();
+  expect((await page.locator('.map-wrap').boundingBox()).width).toBeGreaterThan(600);
+  await expectAccessible(page);
 });
 
 test('mobile layout and route editing work', async ({page}) => {
@@ -70,14 +79,21 @@ test('mobile layout and route editing work', async ({page}) => {
   await expect(page.locator('.hero h1')).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
 
-  await page.getByRole('button', {name: 'Plan a crawl'}).click();
+  await page.getByRole('button', {name: 'Choose a starting place'}).click();
   await expect(page.locator('#location')).toBeFocused();
+  await expect(page.locator('#map')).toBeHidden();
   await page.locator('#location').fill('Toronto');
-  await page.getByRole('option', {name: /Toronto City Hall/}).click();
+  await expect(page.getByRole('option')).toHaveCount(2);
+  await page.locator('#location').press('ArrowDown');
+  await page.locator('#location').press('ArrowDown');
+  await page.locator('#location').press('Enter');
+  await expect(page.locator('#location')).toHaveValue('Nathan Phillips Square, Toronto, Canada');
+  await expect(page.locator('#map')).toBeVisible();
   await page.locator('#build').click();
   await expect(page.locator('#result-title')).toHaveText('6 pubs on your route');
   await expect(page.locator('#stats')).toContainText('6 stops');
   await expect(page.locator('.stop-toggle', {hasText: 'Add'})).toHaveCount(2);
+  expect((await page.locator('.stop-toggle').first().boundingBox()).height).toBeGreaterThanOrEqual(44);
 
   await page.locator('.stop-toggle', {hasText: 'Remove'}).first().click();
   await expect(page.locator('#result-title')).toHaveText('5 pubs on your route');
@@ -86,4 +102,19 @@ test('mobile layout and route editing work', async ({page}) => {
   const controls = await page.locator('.controls').boundingBox();
   const map = await page.locator('.map-wrap').boundingBox();
   expect(map.y).toBeGreaterThanOrEqual(controls.y + controls.height - 1);
+  await expectAccessible(page);
+});
+
+test('pub service failure leaves a usable planner', async ({page}) => {
+  await page.route('https://photon.komoot.io/api/**', (route) => route.fulfill({json: places}));
+  await page.route('https://overpass-api.de/api/interpreter**', (route) => route.fulfill({status: 503}));
+  await page.route('https://nominatim.openstreetmap.org/search?**', (route) => route.fulfill({status: 503}));
+  await page.goto('./');
+  await page.locator('#location').fill('Toronto');
+  await page.getByRole('option', {name: /Toronto City Hall/}).click();
+  await page.locator('#build').click();
+  await expect(page.locator('#status')).toHaveText('Pub search is unavailable. Please try again.');
+  await expect(page.locator('#build')).toBeEnabled();
+  await expect(page.locator('#results')).toBeHidden();
+  await expect(page.locator('#map')).toBeVisible();
 });

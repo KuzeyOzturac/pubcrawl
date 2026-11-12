@@ -1,14 +1,45 @@
-import React from 'react';
-import './app.js';
-import {createRoot} from 'react-dom/client';
-import {Theme} from '@astryxdesign/core/theme';
-import {Heading} from '@astryxdesign/core/Heading';
-import {Button} from '@astryxdesign/core/Button';
-import {themes, defaultThemeSlug} from '../astryx-themes';
-import '@astryxdesign/core/reset.css';
-import '@astryxdesign/core/astryx.css';
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { Theme } from "@astryxdesign/core/theme";
+import { Heading } from "@astryxdesign/core/Heading";
+import { Button } from "@astryxdesign/core/Button";
+import { themes, defaultThemeSlug } from "../astryx-themes";
+import "@astryxdesign/core/reset.css";
+import "@astryxdesign/core/astryx.css";
 
-function Hero(){
-  return <Theme theme={themes[defaultThemeSlug]}><section className="hero"><div><div className="eyebrow">A field guide to a good night out</div><Heading level={1} type="display-1">A better way<br/><em>between pubs.</em></Heading><p>Find the local favourites around you, then follow a walk that connects them. Your next round starts with a place.</p><div className="hero-actions"><Button label="Plan a crawl" variant="primary" onClick={() => document.getElementById('location').focus()}/><span>No account. Just a route.</span></div></div><div className="hero-aside"><span className="asterisk" aria-hidden="true">✳</span><p><strong>Made for wandering.</strong><br/>Set a starting point, tune your radius, and edit your stops as you go. Pub details come from OpenStreetMap.</p></div></section></Theme>;
+function Hero() {
+  return (
+    <Theme theme={themes[defaultThemeSlug]}>
+      <section className="hero">
+        <div>
+          <Heading level={1} type="display-1">
+            Plan a pub crawl near you.
+          </Heading>
+          <p>
+            Choose a starting place and a radius. Roundabout finds nearby pubs
+            and arranges up to six stops in a route you can edit.
+          </p>
+          <div className="hero-actions">
+            <Button
+              label="Choose a starting place"
+              variant="primary"
+              onClick={() => document.getElementById("location").focus()}
+            />
+          </div>
+        </div>
+        <aside className="hero-aside">
+          <strong>Know before you go</strong>
+          <p>
+            Pub details and ratings come from OpenStreetMap. Check opening hours
+            and accessibility with each venue.
+          </p>
+        </aside>
+      </section>
+    </Theme>
+  );
 }
-createRoot(document.getElementById('hero-root')).render(<Hero/>);
+createRoot(document.getElementById("hero-root")).render(<Hero />);
+import("./app.js").catch(() => {
+  document.getElementById("status").textContent =
+    "The map could not load. Refresh to try again.";
+});

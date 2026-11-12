@@ -1,10 +1,13 @@
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
 const $ = (id) => document.getElementById(id);
-const map = L.map('map', { zoomControl: false }).setView([51.5072, -0.1276], 12);
+const map = L.map('map', { zoomControl: false }).setView([0, 0], 2);
 L.control.zoom({ position: 'topright' }).addTo(map);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+const mapTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '© OpenStreetMap contributors',
-}).addTo(map);
+});
 
 let origin = null;
 let pubs = [];
@@ -13,11 +16,37 @@ let markers = [];
 let routeLayer = null;
 let searchTimer;
 let searchController;
+let suggestionRequest = 0;
+let activeSuggestion = -1;
 let searchRequest = 0;
 let routeRequest = 0;
 const filters = { rating: 0, distance: 2 };
 const defaultStopCount = 6;
 const message = (text) => { $('status').textContent = text; };
+const searchInput = $('location');
+const suggestionList = $('suggestions');
+
+function closeSuggestions() {
+  suggestionList.hidden = true;
+  searchInput.setAttribute('aria-expanded', 'false');
+  searchInput.removeAttribute('aria-activedescendant');
+  activeSuggestion = -1;
+}
+
+function setActiveSuggestion(index) {
+  const options = [...suggestionList.querySelectorAll('[role="option"]')];
+  if (!options.length) return;
+  activeSuggestion = ((index % options.length) + options.length) % options.length;
+  options.forEach((option, position) => option.setAttribute('aria-selected', String(position === activeSuggestion)));
+  searchInput.setAttribute('aria-activedescendant', options[activeSuggestion].id);
+  options[activeSuggestion].scrollIntoView({ block: 'nearest' });
+}
+
+function showEmptyMap() {
+  $('map-wrap').classList.remove('has-origin');
+  $('map').setAttribute('aria-hidden', 'true');
+  $('map-note').textContent = 'Choose a starting place to see pubs on the map.';
+}
 const escapeHTML = (value) => String(value || '').replace(/[&<>"']/g, (char) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
 }[char]));
@@ -46,7 +75,7 @@ function resetResults() {
   clearLayers();
   $('results').hidden = true;
   $('build').disabled = false;
-  $('build').textContent = 'Find my route →';
+  $('build').textContent = 'Build route';
 }
 
 function startMarker() {
@@ -56,13 +85,19 @@ function startMarker() {
 
 function setOrigin(lat, lon, label) {
   resetResults();
+  clearTimeout(searchTimer);
+  suggestionRequest++;
+  searchController?.abort();
   origin = { lat, lon, label };
-  $('location').value = label;
-  $('suggestions').hidden = true;
+  searchInput.value = label;
+  closeSuggestions();
+  $('map-wrap').classList.add('has-origin');
+  $('map').removeAttribute('aria-hidden');
   startMarker();
   map.setView([lat, lon], 14);
+  if (!map.hasLayer(mapTiles)) mapTiles.addTo(map);
   map.invalidateSize();
-  $('map-note').textContent = 'Start point selected. Set your filters and find a route.';
+  $('map-note').textContent = 'Starting place selected. Build a route to see stops.';
   message(`Ready to find pubs around ${label}.`);
 }
 
@@ -114,27 +149,34 @@ $('locate').addEventListener('click', () => {
 $('location').addEventListener('input', (event) => {
   origin = null;
   resetResults();
+  showEmptyMap();
   clearTimeout(searchTimer);
+  searchController?.abort();
+  const currentRequest = ++suggestionRequest;
   const query = event.target.value.trim();
-  $('suggestions').hidden = true;
+  closeSuggestions();
   if (query.length < 3) return;
   searchTimer = setTimeout(async () => {
-    searchController?.abort();
     searchController = new AbortController();
     try {
       const response = await fetch(`https://photon.komoot.io/api/?limit=5&q=${encodeURIComponent(query)}`, { signal: searchController.signal });
       if (!response.ok) throw new Error('Search is unavailable. Try again shortly.');
       const matches = (await response.json()).features || [];
-      $('suggestions').replaceChildren();
-      matches.forEach((feature) => {
+      if (currentRequest !== suggestionRequest) return;
+      suggestionList.replaceChildren();
+      matches.forEach((feature, index) => {
         const button = document.createElement('button');
         button.type = 'button';
+        button.id = `suggestion-${index}`;
         button.setAttribute('role', 'option');
+        button.setAttribute('aria-selected', 'false');
+        button.tabIndex = -1;
         button.textContent = placeLabel(feature.properties);
         button.addEventListener('click', () => setOrigin(feature.geometry.coordinates[1], feature.geometry.coordinates[0], button.textContent));
-        $('suggestions').append(button);
+        suggestionList.append(button);
       });
-      $('suggestions').hidden = matches.length === 0;
+      suggestionList.hidden = matches.length === 0;
+      searchInput.setAttribute('aria-expanded', String(matches.length > 0));
       if (!matches.length) message('No places found. Try a broader search.');
     } catch (error) {
       if (error.name !== 'AbortError') message(error.message);
@@ -142,14 +184,19 @@ $('location').addEventListener('input', (event) => {
   }, 300);
 });
 $('location').addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') $('suggestions').hidden = true;
-  if (event.key === 'Enter' && !$('suggestions').hidden) {
-    const first = $('suggestions').querySelector('button');
-    if (first) { event.preventDefault(); first.click(); }
+  if (event.key === 'Escape' || event.key === 'Tab') closeSuggestions();
+  if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && !suggestionList.hidden) {
+    event.preventDefault();
+    const direction = event.key === 'ArrowDown' ? 1 : -1;
+    setActiveSuggestion(activeSuggestion < 0 ? (direction > 0 ? 0 : -1) : activeSuggestion + direction);
+  }
+  if (event.key === 'Enter' && !suggestionList.hidden) {
+    const selected = suggestionList.querySelector('[aria-selected="true"]') || suggestionList.querySelector('[role="option"]');
+    if (selected) { event.preventDefault(); selected.click(); }
   }
 });
 document.addEventListener('click', (event) => {
-  if (!event.target.closest('.field')) $('suggestions').hidden = true;
+  if (!event.target.closest('.field')) closeSuggestions();
 });
 
 function km(a, b) {
@@ -300,13 +347,13 @@ async function renderRoute() {
   try {
     const route = await walkingRoute(points);
     if (request !== routeRequest) return;
-    routeLayer = L.geoJSON(route.geometry, { style: { color: '#d46c42', weight: 5, opacity: 0.95, className: 'route-line' } }).addTo(map);
+    routeLayer = L.geoJSON(route.geometry, { style: { color: '#bc694a', weight: 5, opacity: 0.95, className: 'route-line' } }).addTo(map);
     distance = route.distance / 1000;
     approximate = false;
   } catch {
     if (request !== routeRequest) return;
     routeLayer = L.polyline(points.map((point) => [point.lat, point.lon]), {
-      color: '#d46c42', weight: 4, dashArray: '6 9', className: 'route-line',
+      color: '#bc694a', weight: 4, dashArray: '6 9', className: 'route-line',
     }).addTo(map);
   }
   map.fitBounds(routeLayer.getBounds().pad(0.13), { padding: [30, 30] });
@@ -320,7 +367,7 @@ async function renderRoute() {
 $('build').addEventListener('click', async () => {
   if (!origin) {
     message('Select a place from the suggestions or use your location first.');
-    $('location').focus();
+    searchInput.focus();
     return;
   }
   resetResults();
@@ -359,7 +406,7 @@ $('build').addEventListener('click', async () => {
   } finally {
     if (request === searchRequest) {
       button.disabled = false;
-      button.textContent = 'Find my route →';
+      button.textContent = 'Build route';
     }
   }
 });

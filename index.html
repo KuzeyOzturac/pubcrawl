@@ -1,24 +1,166 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#172b25"><meta name="description" content="Find good pubs nearby and map a walk between them.">
-<title>Roundabout — a better way to pub crawl</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght,SOFT,WONK@9..144,600,0,0;9..144,700,0,0&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
-<link rel="stylesheet" href="./style.css">
-</head>
-<body>
-<div class="shell"><header class="topbar"><a class="brand" href="#" aria-label="Roundabout home">roundabout<i></i></a><span class="topnote">Good pubs. Better wandering.</span></header>
-<div id="hero-root"></div>
-<main class="planner" id="planner"><aside class="controls"><div><span class="panel-kicker">01 / Make a plan</span><h2>Where are we headed?</h2></div>
-<div class="field"><label for="location">Start near</label><div class="input-row"><input id="location" type="text" autocomplete="off" placeholder="Search city, neighbourhood or address" aria-autocomplete="list" aria-controls="suggestions"><button class="icon-button" id="locate" type="button" title="Use my location" aria-label="Use my location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 1v4m0 14v4M1 12h4m14 0h4"/></svg></button></div><div class="suggestions" id="suggestions" role="listbox" hidden></div><small>Choose a suggestion or use your current location.</small></div>
-<div class="field"><div class="slider-head"><label for="rating">Minimum rating</label><strong id="rating-value">Any</strong></div><input id="rating" type="range" min="0" max="5" step=".5" value="0"><div class="range-ends"><span>Any rating</span><span>5 stars</span></div><small>Unrated pubs appear only when set to “Any”.</small></div>
-<div class="field"><div class="slider-head"><label for="distance">Maximum distance</label><strong id="distance-value">2 km</strong></div><input id="distance" type="range" min=".5" max="5" step=".5" value="2"><div class="range-ends"><span>0.5 km</span><span>5 km</span></div><small>Radius from your starting point.</small></div>
-<div><button class="primary" id="build" type="button">Find my route →</button><p class="status" id="status" role="status" aria-live="polite">Choose a starting place to begin.</p></div>
-<div class="results" id="results" hidden><span class="panel-kicker">02 / Your crawl</span><h3 id="result-title"></h3><div class="stats" id="stats"></div><p class="results-help">Start with up to six stops. Add or remove pubs below to change your route.</p><ol class="stop-list" id="stops"></ol></div>
-</aside><div class="map-wrap"><div id="map" aria-label="Map showing the pub crawl route"></div><div class="map-caption"><b>On the map</b><span id="map-note">Search for a place to set the scene.</span></div></div></main>
-<footer class="footer"><p>Find your next favourite local. Drink responsibly; check opening hours before setting out.</p><p>Map © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a> · Search by Photon · Walking routes by OSRM</p></footer></div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script type="module" src="./src/main.jsx"></script></body></html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#e9ecdf" />
+    <meta
+      name="description"
+      content="Choose a starting place, find nearby pubs, and edit a walking route between them."
+    />
+    <title>Roundabout | Pub crawl route planner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght,SOFT,WONK@9..144,600,0,0;9..144,700,0,0&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Roundabout home"
+          >roundabout<i></i></a
+        ><span class="topnote">Pub crawl route planner</span>
+      </header>
+      <main>
+        <div id="hero-root"></div>
+        <section class="planner" id="planner">
+          <aside class="controls">
+            <div>
+              <span class="panel-kicker">01 / Plan your route</span>
+              <h2>Set your route</h2>
+            </div>
+            <div class="field">
+              <label for="location">Start near</label>
+              <div class="input-row">
+                <input
+                  id="location"
+                  type="text"
+                  role="combobox"
+                  autocomplete="off"
+                  placeholder="City, neighbourhood or address"
+                  aria-autocomplete="list"
+                  aria-haspopup="listbox"
+                  aria-expanded="false"
+                  aria-controls="suggestions"
+                /><button
+                  class="icon-button"
+                  id="locate"
+                  type="button"
+                  title="Use my location"
+                  aria-label="Use my location"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                  >
+                    <circle cx="12" cy="12" r="7" />
+                    <circle cx="12" cy="12" r="2" />
+                    <path d="M12 1v4m0 14v4M1 12h4m14 0h4" />
+                  </svg>
+                </button>
+              </div>
+              <div
+                class="suggestions"
+                id="suggestions"
+                role="listbox"
+                hidden
+              ></div>
+              <small>Pick a suggestion or use your current location.</small>
+            </div>
+            <div class="field">
+              <div class="slider-head">
+                <label for="rating">Minimum rating</label
+                ><strong id="rating-value">Any</strong>
+              </div>
+              <input
+                id="rating"
+                type="range"
+                min="0"
+                max="5"
+                step=".5"
+                value="0"
+              />
+              <div class="range-ends">
+                <span>Any rating</span><span>5 stars</span>
+              </div>
+              <small>Unrated pubs appear only when set to “Any”.</small>
+            </div>
+            <div class="field">
+              <div class="slider-head">
+                <label for="distance">Maximum distance</label
+                ><strong id="distance-value">2 km</strong>
+              </div>
+              <input
+                id="distance"
+                type="range"
+                min=".5"
+                max="5"
+                step=".5"
+                value="2"
+              />
+              <div class="range-ends"><span>0.5 km</span><span>5 km</span></div>
+              <small>Radius from your starting point.</small>
+            </div>
+            <div>
+              <button class="primary" id="build" type="button">
+                Build route
+              </button>
+              <p class="status" id="status" role="status" aria-live="polite">
+                Choose a starting place to begin.
+              </p>
+            </div>
+            <div class="results" id="results" hidden>
+              <span class="panel-kicker">02 / Your route</span>
+              <h3 id="result-title"></h3>
+              <div class="stats" id="stats"></div>
+              <p class="results-help">
+                Start with up to six stops. Add or remove pubs below to change
+                your route.
+              </p>
+              <ol class="stop-list" id="stops"></ol>
+            </div>
+          </aside>
+          <div class="map-wrap" id="map-wrap">
+            <div
+              id="map"
+              aria-label="Map showing the pub crawl route"
+              aria-hidden="true"
+            ></div>
+            <div class="map-empty">
+              <strong>No starting place selected</strong>
+              <p>Search a city, neighbourhood or address to load the map.</p>
+            </div>
+            <div class="map-caption">
+              <b>On the map</b
+              ><span id="map-note"
+                >Choose a starting place to see pubs on the map.</span
+              >
+            </div>
+          </div>
+        </section>
+      </main>
+      <footer class="footer">
+        <p>
+          Routes are estimates. Drink responsibly and check venues before you
+          go.
+        </p>
+        <p>
+          Map ©
+          <a
+            href="https://www.openstreetmap.org/copyright"
+            target="_blank"
+            rel="noopener"
+            >OpenStreetMap contributors</a
+          >
+          · Search by Photon · Walking routes by OSRM
+        </p>
+      </footer>
+    </div>
+    <script type="module" src="./src/main.jsx"></script>
+  </body>
+</html>
