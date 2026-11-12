@@ -1,6 +1,6 @@
 # Roundabout design system
 
-Last updated: 2026-11-12 — Astryx Matcha redesign, Vite build, and production contrast correction.
+Last updated: 2026-11-12 — Astryx Matcha redesign, production contrast checks, and a six-stop starting route.
 
 ## Direction
 
@@ -28,3 +28,5 @@ Use concise, practical language. State rating coverage and route limitations cle
 ## Astryx integration
 
 The hero uses Astryx Theme, Heading, and Button components with the Matcha theme. The planner retains its existing DOM and route logic, with a matching visual layer in `style.css`. The generated `astryx-themes.js` records the theme choice. Build with Vite and deploy `dist/`.
+
+Browser checks assert contrast from computed colours on the built page, a narrow viewport without horizontal scrolling, and a full route flow using controlled public-data responses. The same checks run after deployment against GitHub Pages.

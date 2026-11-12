@@ -16,6 +16,7 @@ let searchController;
 let searchRequest = 0;
 let routeRequest = 0;
 const filters = { rating: 0, distance: 2 };
+const defaultStopCount = 6;
 const message = (text) => { $('status').textContent = text; };
 const escapeHTML = (value) => String(value || '').replace(/[&<>"']/g, (char) => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -347,7 +348,8 @@ $('build').addEventListener('click', async () => {
       message('No pubs match these filters. Try a larger radius or lower rating.');
       return;
     }
-    excluded = new Set();
+    const initialStops = new Set(optimize(pubs).slice(0, defaultStopCount).map((pub) => pub.id));
+    excluded = new Set(pubs.filter((pub) => !initialStops.has(pub.id)).map((pub) => pub.id));
     await renderRoute();
     if (search.source === 'nominatim') {
       $('map-note').textContent += ' Pub search used a 50-result fallback; some pubs may be missing.';

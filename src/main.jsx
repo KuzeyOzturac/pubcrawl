@@ -1,4 +1,5 @@
 import React from 'react';
+import './app.js';
 import {createRoot} from 'react-dom/client';
 import {Theme} from '@astryxdesign/core/theme';
 import {Heading} from '@astryxdesign/core/Heading';
