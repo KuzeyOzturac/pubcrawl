@@ -8,3 +8,10 @@ body{background:var(--cream);color:var(--ink)}.shell{max-width:1560px}.topbar{he
 .hero-actions button{color:#f8f8f0!important}.hero-actions button:hover{color:#f8f8f0!important}
 .hero-actions button,.hero-actions button *{color:#f8f8f0!important}
 .stop-list .stop-number{color:#f8f8f0}.stop-list li.excluded .stop-number{color:var(--ink)}
+
+/* Keep readable ink when the Matcha theme sets component heading colors. */
+.hero h1,.hero h1 *,.controls h2,.results h3,.footer,.footer a{color:#243b2d!important}
+.hero h1 em,.hero h1 em *{color:#4b7153!important}
+.hero-actions button{background:#315940!important;border-color:#315940!important}
+.hero-actions button:hover{background:#244833!important}
+.footer,.footer a{color:#42584a!important}

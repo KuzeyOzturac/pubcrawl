@@ -1,6 +1,6 @@
 # Roundabout design system
 
-Last updated: 2026-11-12 — Astryx Matcha redesign and Vite build.
+Last updated: 2026-11-12 — Astryx Matcha redesign, Vite build, and production contrast correction.
 
 ## Direction
 
@@ -8,8 +8,8 @@ An editorial field guide with Astryx Matcha foundations: pale sage ground, deep 
 
 ## Tokens
 
-- Background: #f4f0e7; panel: #fffcf5; ink: #172b25; muted: #526359.
-- Action accent: #d3e179; route accent: #d46c42; borders: #d6d7c9.
+- Background: #e9ecdf; panel: #f8f8f0; ink: #243b2d; muted: #42584a.
+- Action accent: #315940; route accent: #bc694a; borders: #bcc8ae.
 - Heading: Fraunces, 600–700. Body: DM Sans, 400–700.
 - Square-ish 3px controls, thin borders, limited shadow on the main planner.
 
