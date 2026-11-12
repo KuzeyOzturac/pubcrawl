@@ -1,6 +1,6 @@
 # Roundabout
 
-A responsive, static pub crawl planner. Search for a starting place, choose a minimum rating and search radius, and map every matching pub in an efficient stop order.
+A responsive pub crawl planner, redesigned with Astryx and its Matcha theme. Search for a starting place, choose a minimum rating and search radius, and map every matching pub in an efficient stop order.
 
 ## How it works
 
@@ -12,7 +12,7 @@ A responsive, static pub crawl planner. Search for a starting place, choose a mi
 
 ## Run
 
-Open `index.html` in a browser or serve the folder with a static server, e.g. `python3 -m http.server 8000`. No build step or API keys are required. Network access is required for the map tiles and public data services.
+Run `npm install` and `npm run dev` for local development. Run `npm run build` to create `dist/` for deployment. No API keys are required. Network access is required for map tiles and public data services.
 
 ## Limitations
 
@@ -20,4 +20,4 @@ OpenStreetMap coverage, ratings, and opening hours vary by place. Public service
 
 ## Deployment
 
-GitHub Pages can serve the repository root from the `main` branch. The site uses root-relative assets only from third-party CDNs and works under the repository path.
+Publish the `dist/` directory to GitHub Pages or another static host. Vite uses relative asset paths so the site works under a repository path.

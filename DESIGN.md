@@ -1,10 +1,10 @@
 # Roundabout design system
 
-Last updated: 2026-11-10 — repaired map layout and added stop controls.
+Last updated: 2026-11-12 — Astryx Matcha redesign and Vite build.
 
 ## Direction
 
-Editorial neighbourhood guide: warm paper, deep green ink, lime controls, and a restrained terracotta route. Large Fraunces headings give the page character; DM Sans keeps the controls legible.
+An editorial field guide with Astryx Matcha foundations: pale sage ground, deep green ink, botanical controls, and a restrained terracotta route. Large Fraunces headings give the page character; DM Sans keeps the controls legible.
 
 ## Tokens
 
@@ -24,3 +24,7 @@ The route line animates as a quiet directional cue. Reduced-motion users get a s
 ## Content
 
 Use concise, practical language. State rating coverage and route limitations clearly. Avoid fabricated pubs, ratings, and distances.
+
+## Astryx integration
+
+The hero uses Astryx Theme, Heading, and Button components with the Matcha theme. The planner retains its existing DOM and route logic, with a matching visual layer in `style.css`. The generated `astryx-themes.js` records the theme choice. Build with Vite and deploy `dist/`.
